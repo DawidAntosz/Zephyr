@@ -26,10 +26,9 @@ extern void clock3_function(struct k_timer *timer_id);
 
 int main(void){
 
-	SEGGER_SYSVIEW_Conf();
-	SEGGER_SYSVIEW_Start();
-
 	struct app_context ctx;
+
+	printk("Clock, current_time\r\n");
 
 	k_timer_init(&ctx.clocks.clock1, clock1_function, NULL);
 	k_timer_init(&ctx.clocks.clock2, clock2_function, NULL);
@@ -55,7 +54,7 @@ extern void clock1_function(struct k_timer *timer_id){
 	struct app_context *ctx = CONTAINER_OF(timer_id, struct app_context, clocks.clock1);
 	uint32_t current_time = k_uptime_get_32();
 
-	printk("Clock 1 - Current time: %d ms\n",current_time - ctx->logs.lastLog_time1);
+	printk("1,%d\n",current_time - ctx->logs.lastLog_time1);
 	ctx->logs.lastLog_time1 = current_time;
 }
 
@@ -64,7 +63,7 @@ extern void clock2_function(struct k_timer *timer_id){
 	struct app_context *ctx = CONTAINER_OF(timer_id, struct app_context, clocks.clock2);
 	uint32_t current_time = k_uptime_get_32();
 
-	printk("Clock 2 - Current time: %d ms\n",current_time - ctx->logs.lastLog_time2);
+	printk("2,%d\n",current_time - ctx->logs.lastLog_time2);
 	ctx->logs.lastLog_time2 = current_time;
 }
 
@@ -74,6 +73,6 @@ extern void clock3_function(struct k_timer *timer_id){
 	uint32_t current_time = k_uptime_get_32();
 
 	// printk("Clock 3 - Current time: %d ms\n", current_time - ctx->logs.lastLog_time3);
-	printk("Clock 3 - Current time: %d ms\n",current_time - ctx->logs.lastLog_time3);
+	printk("3,%d\n",current_time - ctx->logs.lastLog_time3);
 	ctx->logs.lastLog_time3 = current_time;
 }
