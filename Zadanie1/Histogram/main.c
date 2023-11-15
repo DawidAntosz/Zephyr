@@ -3,7 +3,7 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/sys/util.h>
 
-#define max_samples 1000
+#define max_samples 10000
 
 struct AllClocks {
 	struct k_timer clock1;
@@ -23,17 +23,13 @@ struct app_context {
 };
 
 uint32_t tab1[max_samples];
+uint32_t tab1_t[max_samples];
 uint32_t tab2[max_samples];
 uint32_t tab3[max_samples];
-
-uint32_t tab1_t[max_samples];
-uint32_t tab2_t[max_samples];
-uint32_t tab3_t[max_samples];
 
 extern void clock1_function(struct k_timer *timer_id);
 extern void clock2_function(struct k_timer *timer_id);
 extern void clock3_function(struct k_timer *timer_id);
-
 volatile bool isWorking = true;
 
 int main(void){
@@ -56,15 +52,14 @@ int main(void){
 
 	while(isWorking);
 	printk("clk,time\r\n");
-
 	for(int i = 0; i<max_samples;i++){
-		printk("1,%llu,%llu\r\n", k_cyc_to_us_floor64(tab1[i]), k_ticks_to_us_floor64(tab1_t[i]));
-		printk("2,%llu,%llu\r\n", k_cyc_to_us_floor64(tab2[i]), k_ticks_to_us_floor64(tab2_t[i]));
-		printk("3,%llu,%llu\r\n", k_cyc_to_us_floor64(tab3[i]), k_ticks_to_us_floor64(tab3_t[i]));
+		printk("1,%llu\r\n", k_cyc_to_us_floor64(tab1[i]));
+		printk("2,%llu\r\n", k_cyc_to_us_floor64(tab2[i]));
+		printk("3,%llu\r\n", k_cyc_to_us_floor64(tab3[i]));
 	}
 
 	while (1) {
-	/* ===   NOTHING   === */
+	/* ===   NOTHING   === */	
 	}
 }
 
@@ -74,16 +69,13 @@ extern void clock1_function(struct k_timer *timer_id){
 	struct app_context *ctx = CONTAINER_OF(timer_id, struct app_context, clocks.clock1);
 	uint32_t current_time = k_cycle_get_32();
 	static int i = 0;
-
 	tab1_t[i] = k_uptime_get_32();
-
 	tab1[i] = current_time - ctx->logs.lastLog_time1;
 	i++;
-
 	if(i == max_samples){
 		k_timer_stop(timer_id);
 	}
-	
+	// printk("1,%d\n",current_time - ctx->logs.lastLog_time1);
 	ctx->logs.lastLog_time1 = current_time;
 	isWorking = false;
 }
@@ -92,23 +84,16 @@ extern void clock2_function(struct k_timer *timer_id){
 
 	struct app_context *ctx = CONTAINER_OF(timer_id, struct app_context, clocks.clock2);
 	uint32_t current_time = k_cycle_get_32();
-	
 	static int i = 0;
-	
-	tab2_t[i] = k_uptime_get_32();
-
 	tab2[i] = current_time - ctx->logs.lastLog_time2;
-	
 	i++;
-
 	if(i == max_samples){
 		k_timer_stop(timer_id);
 	}
 
+	// printk("2,%d\n",current_time - ctx->logs.lastLog_time2);
 	ctx->logs.lastLog_time2 = current_time;
 }
-
-
 
 extern void clock3_function(struct k_timer *timer_id){
 
@@ -116,16 +101,12 @@ extern void clock3_function(struct k_timer *timer_id){
 	uint32_t current_time = k_cycle_get_32();
 
 	static int i = 0;
-	
-	tab3_t[i] = k_uptime_get_32();
-
 	tab3[i] = current_time - ctx->logs.lastLog_time3;
-	
 	i++;
-	
 	if(i == max_samples){
 		k_timer_stop(timer_id);
 	}
-
+	// printk("Clock 3 - Current time: %d ms\n", current_time - ctx->logs.lastLog_time3);
+	// printk("3,%d\n",current_time - ctx->logs.lastLog_time3);
 	ctx->logs.lastLog_time3 = current_time;
 }
