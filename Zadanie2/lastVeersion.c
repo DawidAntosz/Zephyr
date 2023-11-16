@@ -1,10 +1,10 @@
+User
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/sys/util.h>
 
 #define STACK_SIZE 1024
 #define max_samples 250
-#define MY_PRIORITY 7
 
 K_SEM_DEFINE(semaphore100, 0, 1);
 K_SEM_DEFINE(semaphore300, 0, 1);
@@ -13,18 +13,12 @@ K_SEM_DEFINE(semaphore1000, 0, 1);
 K_SEM_DEFINE(semaphore2000, 0, 1);
 K_SEM_DEFINE(semaphore5000, 0, 1);
 
-void thread_fun1(uint32_t *tab, uint32_t *tab_t, uint32_t *lastLog);
-void thread_fun2(uint32_t *tab, uint32_t *tab_t, uint32_t *lastLog);
-
-// K_THREAD_STACK_DEFINE(thread1_stack, STACK_SIZE);
-// K_THREAD_STACK_DEFINE(thread2_stack, STACK_SIZE);
-// // K_THREAD_STACK_DEFINE(thread3, STACK_SIZE);
-// // K_THREAD_STACK_DEFINE(thread4, STACK_SIZE);
-// // K_THREAD_STACK_DEFINE(thread5, STACK_SIZE);
-// // K_THREAD_STACK_DEFINE(thread6, STACK_SIZE);
-
-// struct k_thread thread1;
-// struct k_thread thread2;
+K_THREAD_STACK_DEFINE(thread1, STACK_SIZE);
+K_THREAD_STACK_DEFINE(thread2, STACK_SIZE);
+K_THREAD_STACK_DEFINE(thread3, STACK_SIZE);
+K_THREAD_STACK_DEFINE(thread4, STACK_SIZE);
+K_THREAD_STACK_DEFINE(thread5, STACK_SIZE);
+K_THREAD_STACK_DEFINE(thread6, STACK_SIZE);
 
 uint32_t tab1[max_samples];
 uint32_t tab2[max_samples];
@@ -40,12 +34,12 @@ uint32_t tab4_t[max_samples];
 uint32_t tab5_t[max_samples];
 uint32_t tab6_t[max_samples];
 
-uint32_t lastLog_sem1;
-uint32_t lastLog_sem2;
-uint32_t lastLog_sem3;
-uint32_t lastLog_sem4;
-uint32_t lastLog_sem5;
-uint32_t lastLog_sem6;
+uint32_t lastLog_sem1 = 0;
+uint32_t lastLog_sem2 = 0;
+uint32_t lastLog_sem3 = 0;
+uint32_t lastLog_sem4 = 0;
+uint32_t lastLog_sem5 = 0;
+uint32_t lastLog_sem6 = 0;
 
 volatile bool isWorking = true;
 
@@ -75,13 +69,14 @@ extern void timer_function(struct k_timer *timer_id){
 K_TIMER_DEFINE(timer, timer_function, NULL);
 
 
-void thread_fun1(uint32_t *tab, uint32_t *tab_t, uint32_t *lastLog) {
+void thread_fun1(void *semaphore, uint32_t *tab, uint32_t *tab_t, uint32_t *lastLog) {
     
 	static __thread int i = 0;
-	printk("Thread 1\n");
-
+	printk("Thread 1");
 	while (1) {
-		if (k_sem_take(&semaphore100, K_FOREVER) != 0){printk("Input data not available!\n");} 
+		if (k_sem_take(semaphore, K_FOREVER) != 0) {
+            printk("Input data not available!\n");
+        } 
 		else {
 			if(i < max_samples){
 				i++;
@@ -91,21 +86,21 @@ void thread_fun1(uint32_t *tab, uint32_t *tab_t, uint32_t *lastLog) {
 				tab_t[i] = current_time;
 				*lastLog = current_time;
 			}
-			
         }
     }
 }
 
-void thread_fun2(uint32_t *tab, uint32_t *tab_t, uint32_t *lastLog) {
+void thread_fun2(void *semaphore, uint32_t *tab, uint32_t *tab_t, uint32_t *lastLog) {
     
 	static __thread int i = 0;
-
+	printk("Thread 2");
 	while (1) {
-		if (k_sem_take(&semaphore300, K_FOREVER) != 0){printk("Input data not available!\n");} 
+		if (k_sem_take(semaphore, K_FOREVER) != 0) {
+            printk("Input data not available!\n");
+        } 
 		else {
-			
+
 			if(i < max_samples){
-				printk("Thread 2\n");
 				i++;
 				printk("%d\n\r",i);
 				uint32_t current_time = k_cycle_get_32();
@@ -113,48 +108,10 @@ void thread_fun2(uint32_t *tab, uint32_t *tab_t, uint32_t *lastLog) {
 				tab_t[i] = current_time;
 				*lastLog = current_time;
 			}
-			
         }
     }
 }
 
-
-
-
-K_THREAD_DEFINE(thread1, STACK_SIZE,
-                thread_fun1, tab1, tab1_t, &lastLog_sem1, 
-                MY_PRIORITY, 0, 0);
-				
-K_THREAD_DEFINE(thread2, STACK_SIZE,
-                thread_fun2, tab2, tab2_t, &lastLog_sem2, 
-                MY_PRIORITY, 0, 0);
-
-
-
-
-
-
-
-
-// k_tid_t my_thread1 = k_thread_create(&thread1, thread1_stack,
-//                                  K_THREAD_STACK_SIZEOF(thread1_stack),
-//                                  thread_fun1,
-//                                  tab1, tab1_t, &lastLog_sem1, 
-//                                  MY_PRIORITY, 0, K_NO_WAIT);
-
-// k_tid_t my_thread2 = k_thread_create(&thread2, thread2_stack,
-//                                  K_THREAD_STACK_SIZEOF(thread2_stack),
-//                                  thread_fun2,
-//                                  tab2, tab2_t, &lastLog_sem2, 
-//                                  MY_PRIORITY+1, 0, K_NO_WAIT);
-
-// K_THREAD_DEFINE(thread1, STACK_SIZE, thread_fun1, 
-// 				tab1, tab1_t, &lastLog_sem1, 
-// 				MY_PRIORITY, 0, 0);
-
-// K_THREAD_DEFINE(thread2, STACK_SIZE, thread_fun2, 
-// 				tab2, tab2_t, &lastLog_sem2, 
-// 				MY_PRIORITY, 0, 0);
 
 int main(void){
 
@@ -169,8 +126,8 @@ int main(void){
 	k_timer_start(&timer, K_USEC(100), K_USEC(100));
 
 
-	// k_thread_create(&thread1, thread1, STACK_SIZE, thread_fun1, tab1, tab1_t, &lastLog_sem1, 0, 0, K_NO_WAIT);
-    // k_thread_create(&thread2, thread2, STACK_SIZE, thread_fun2, tab2, tab2_t, &lastLog_sem2, 0, 0, K_NO_WAIT);
+	k_thread_create(&thread1, thread1, STACK_SIZE, thread_fun1, &semaphore100, tab1, tab1_t, &lastLog_sem1, 0, K_NO_WAIT);
+    k_thread_create(&thread2, thread2, STACK_SIZE, thread_fun2, &semaphore300, tab2, tab2_t, &lastLog_sem2, 0, K_NO_WAIT);
     // k_thread_create(&thread3, thread3, STACK_SIZE, thread_fun3, &semaphore500, tab3, tab3_t, &lastLog_sem3, 0, K_NO_WAIT);
     // k_thread_create(&thread4, thread4, STACK_SIZE, thread_fun4, &semaphore1000, tab4, tab4_t, &lastLog_sem4, 0, K_NO_WAIT);
     // k_thread_create(&thread5, thread5, STACK_SIZE, thread_fun5, &semaphore2000, tab5, tab5_t, &lastLog_sem5, 0, K_NO_WAIT);
