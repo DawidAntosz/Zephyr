@@ -17,6 +17,13 @@ zephyrproject\.venv\Scripts\Activate.ps1
 
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
+## ============
+
+PS C:\Users\Dawid> zephyrproject\.venv\Scripts\Activate.ps1
+
+(.venv) PS C:\Users\Dawid\zephyrproject\zephyr> west build -p always -b nucleo_f091rc samples/basic/Zadanie3
+
+
 ##  ===================================================
 
 west build -p always -b nucleo_f091rc MyProject\Zadanie1
@@ -31,4 +38,10 @@ west flash
 
 
 west build -t menuconfig
+
+
+
+
+
+
 
